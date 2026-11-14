@@ -303,4 +303,173 @@ function closeModal(modalId) {
   if (el) el.classList.remove('open');
 }
 
+/**
+ * Feature #2: Indian Bank / UPI SMS Auto-Reader Helpers
+ */
+function fillSampleSms(smsText) {
+  const input = document.getElementById('smsInputText');
+  if (!input) return;
+  input.value = smsText;
+  previewSmsParse();
+}
+
+async function previewSmsParse() {
+  const input = document.getElementById('smsInputText');
+  const preview = document.getElementById('smsParsedPreview');
+  if (!input || !preview) return;
+
+  const text = input.value.trim();
+  if (text.length < 6) {
+    preview.textContent = 'Parsed details (Merchant, ₹ Amount, Bank, Category) will appear here automatically.';
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-sms', {
+      method: 'POST',
+      body: JSON.stringify({ sms_text: text, auto_save: false }),
+    });
+    const p = res.parsed;
+    preview.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span><strong>${escapeHtml(p.detected_bank)}</strong> • ${escapeHtml(p.type.toUpperCase())}: <strong>${formatINR(p.amount, true)}</strong></span>
+        <span class="badge badge-info">${escapeHtml(p.category)}</span>
+      </div>
+      <div style="margin-top:4px;color:var(--text-secondary);">
+        Merchant: <strong>${escapeHtml(p.merchant)}</strong> • Date: <strong>${formatDate(p.date)}</strong> • Mode: ${escapeHtml(p.payment_method)}
+      </div>
+    `;
+  } catch (err) {
+    preview.textContent = `SMS Parser Note: ${err.message}`;
+  }
+}
+
+async function submitSmsTransaction(autoSave = true) {
+  const input = document.getElementById('smsInputText');
+  if (!input || !input.value.trim()) {
+    showToast('Please paste an SMS or click one of the sample bank alerts first.', 'error');
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-sms', {
+      method: 'POST',
+      body: JSON.stringify({ sms_text: input.value.trim(), auto_save: autoSave }),
+    });
+    showToast(res.message, 'success');
+    input.value = '';
+    closeModal('smsReaderModal');
+    await refreshSidebarStatus();
+    if (typeof loadDashboardData === 'function') await loadDashboardData();
+    if (typeof loadTransactionsPage === 'function') await loadTransactionsPage();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+/**
+ * Feature #7: Voice Expense Entry (English + Hinglish + Web Speech API)
+ */
+function fillSampleVoice(phrase) {
+  const input = document.getElementById('voiceInputText');
+  if (!input) return;
+  input.value = phrase;
+  previewVoiceParse();
+}
+
+async function previewVoiceParse() {
+  const input = document.getElementById('voiceInputText');
+  const preview = document.getElementById('voiceParsedPreview');
+  if (!input || !preview) return;
+
+  const text = input.value.trim();
+  if (text.length < 4) {
+    preview.textContent = 'Voice AI Parser Ready: Extracts ₹ Amount, Merchant, Relative Date (Today/Kal/Yesterday), and Category.';
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-voice', {
+      method: 'POST',
+      body: JSON.stringify({ transcript: text, auto_save: false }),
+    });
+    const p = res.parsed;
+    preview.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span><strong>${escapeHtml(p.description)}</strong> (${escapeHtml(p.type.toUpperCase())}): <strong>${formatINR(p.amount, true)}</strong></span>
+        <span class="badge badge-success">${escapeHtml(p.category)}</span>
+      </div>
+      <div style="margin-top:4px;color:var(--text-secondary);">
+        Date: <strong>${formatDate(p.date)} (${escapeHtml(p.date_label)})</strong> • ${escapeHtml(p.categorization_reason)}
+      </div>
+    `;
+  } catch (err) {
+    preview.textContent = `Voice Parser Note: ${err.message}`;
+  }
+}
+
+function startBrowserVoiceRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = document.getElementById('startMicBtn');
+  const input = document.getElementById('voiceInputText');
+
+  if (!SpeechRecognition) {
+    showToast('Browser Speech API not supported in this window — use the sample Hinglish chips or type your phrase!', 'info');
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-IN';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  if (micBtn) {
+    micBtn.textContent = '🔴 Listening...';
+  }
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    if (input) {
+      input.value = transcript;
+      previewVoiceParse();
+    }
+    showToast(`Heard: "${transcript}"`, 'success');
+  };
+
+  recognition.onerror = () => {
+    showToast('Microphone capture ended or blocked — click any sample Hinglish chip to test!', 'info');
+  };
+
+  recognition.onend = () => {
+    if (micBtn) {
+      micBtn.textContent = '🎙️ Speak Now';
+    }
+  };
+
+  recognition.start();
+}
+
+async function submitVoiceTransaction(autoSave = true) {
+  const input = document.getElementById('voiceInputText');
+  if (!input || !input.value.trim()) {
+    showToast('Please speak or select a sample Hinglish voice command first.', 'error');
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-voice', {
+      method: 'POST',
+      body: JSON.stringify({ transcript: input.value.trim(), auto_save: autoSave }),
+    });
+    showToast(res.message, 'success');
+    input.value = '';
+    closeModal('voiceEntryModal');
+    await refreshSidebarStatus();
+    if (typeof loadDashboardData === 'function') await loadDashboardData();
+    if (typeof loadTransactionsPage === 'function') await loadTransactionsPage();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', initSharedShell);

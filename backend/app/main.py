@@ -28,6 +28,7 @@ from app.routes import (
     recommendations,
     simulations,
     ai_assistant,
+    smart_features,
 )
 from app.services.gemini_ai import get_ai_configuration_status
 from app.utils.seed_demo import seed_demo_data
@@ -292,6 +293,7 @@ app.include_router(predictions.router)
 app.include_router(recommendations.router)
 app.include_router(simulations.router)
 app.include_router(ai_assistant.router)
+app.include_router(smart_features.router)
 
 
 # ============================================================================

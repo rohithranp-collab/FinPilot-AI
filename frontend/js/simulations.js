@@ -176,10 +176,18 @@ function renderSimulationResult(sim) {
         ? 'warning'
         : 'danger';
     verdictBox.className = `insight-item ${vCls}`;
+    const runwayInfo =
+      details.runway_days_before !== undefined
+        ? `<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(148,163,184,0.16);font-size:0.82rem;color:#93c5fd;">
+             <strong>⏱️ Cash Runway Impact:</strong> ${details.runway_days_before} days → <strong>${details.runway_days_after} days</strong>
+             ${details.optimal_timing_advice ? `<br/><span>💡 ${escapeHtml(details.optimal_timing_advice)}</span>` : ''}
+           </div>`
+        : '';
     verdictBox.innerHTML = `
       <div class="insight-body">
         <h4>AI Financial Impact Verdict</h4>
         <p>${escapeHtml(sim.verdict)}</p>
+        ${runwayInfo}
       </div>
     `;
   }

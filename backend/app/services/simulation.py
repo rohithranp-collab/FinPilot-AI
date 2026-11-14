@@ -216,6 +216,23 @@ def run_financial_simulation(
             f"₹{projected_after:,.0f}."
         )
 
+    daily_burn = max(monthly_expense / 30.0, 100.0)
+    runway_days_before = int(round(max(0.0, current_balance / daily_burn)))
+    post_upfront_balance = max(0.0, current_balance - one_time_impact)
+    new_daily_burn = max((monthly_expense + monthly_impact) / 30.0, 100.0)
+    runway_days_after = int(round(max(0.0, post_upfront_balance / new_daily_burn)))
+
+    if risk_level in ("Critical", "High"):
+        optimal_timing_advice = (
+            f"Wait until your next salary cycle (5th of next month) or split the ₹{one_time_impact:,.0f} upfront outlay — "
+            f"immediate execution reduces your liquid cash runway from {runway_days_before} days to {runway_days_after} days."
+        )
+    else:
+        optimal_timing_advice = (
+            f"Safe to execute now: your liquid cash runway shifts from {runway_days_before} days to {runway_days_after} days, "
+            f"staying comfortably above the 30-day safety threshold."
+        )
+
     details_payload = {
         "scenario_summary": scenario_summary,
         "baseline_monthly_income": round(monthly_income, 2),
@@ -223,6 +240,9 @@ def run_financial_simulation(
         "baseline_monthly_surplus": baseline_monthly_surplus,
         "post_decision_monthly_surplus": post_decision_monthly_surplus,
         "minimum_balance_reached": round(min_balance_after, 2),
+        "runway_days_before": runway_days_before,
+        "runway_days_after": runway_days_after,
+        "optimal_timing_advice": optimal_timing_advice,
         "total_interest_cost": total_interest_cost,
         "interest_saved": interest_saved,
         "months_saved": months_saved,
