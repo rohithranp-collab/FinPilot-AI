@@ -1,9 +1,16 @@
 """FinPilot AI – FastAPI Application Entrypoint (Production & Local Ready)."""
 import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
+
+# Ensure backend directory is on sys.path whether launched from project root or backend/
+_BACKEND_DIR_INIT = Path(__file__).resolve().parent.parent
+if str(_BACKEND_DIR_INIT) not in sys.path:
+    sys.path.insert(0, str(_BACKEND_DIR_INIT))
+
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError

@@ -21,6 +21,7 @@ let activeHorizonDays = 30;
 
 async function loadDashboardData() {
   try {
+    await refreshSidebarStatus();
     const [summary, categories, forecast, txData, recurring, anomalies] = await Promise.all([
       apiRequest('/api/analytics/summary'),
       apiRequest('/api/analytics/categories'),

@@ -230,11 +230,11 @@ async function refreshSidebarStatus() {
   try {
     const health = await apiRequest('/api/health');
     if (apiStatusEl) {
-      apiStatusEl.innerHTML = `<span class="status-dot"></span> API Connected`;
+      apiStatusEl.innerHTML = `<span class="status-dot"></span> API Online`;
       apiStatusEl.style.color = '#34d399';
     }
     if (dataCountsEl) {
-      dataCountsEl.textContent = `${health.user_transactions_count} User • ${health.demo_transactions_count} Demo Txns`;
+      dataCountsEl.textContent = `${health.transactions_count || 0} Total (${health.user_transactions_count || 0} User • ${health.demo_transactions_count || 0} Demo)`;
     }
     if (dataBadgeEl) {
       if (health.demo_transactions_count > 0 && health.user_transactions_count > 0) {
@@ -251,11 +251,20 @@ async function refreshSidebarStatus() {
         dataBadgeEl.className = 'badge badge-neutral';
       }
     }
+    return health;
   } catch (err) {
     if (apiStatusEl) {
       apiStatusEl.innerHTML = `<span class="status-dot" style="background:#f43f5e;box-shadow:0 0 8px #f43f5e;"></span> API Offline`;
       apiStatusEl.style.color = '#fb7185';
     }
+    if (dataBadgeEl) {
+      dataBadgeEl.textContent = 'API Offline';
+      dataBadgeEl.className = 'badge badge-danger';
+    }
+    if (dataCountsEl) {
+      dataCountsEl.textContent = 'Backend unreachable on /api/health';
+    }
+    return null;
   }
 }
 

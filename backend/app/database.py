@@ -7,7 +7,6 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 BASE_DIR = Path(__file__).resolve().parent.parent
 BASE_DIR.mkdir(parents=True, exist_ok=True)
 DB_PATH = BASE_DIR / "finpilot.db"
-
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
     f"sqlite:///{DB_PATH.as_posix()}",
