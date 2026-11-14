@@ -1,0 +1,475 @@
+/**
+ * FinPilot AI – Core Application Utilities, API Client & Shared UI Shell
+ */
+
+const FINPILOT_CONFIG = {
+  /**
+   * Use relative API URLs ('') by default so frontend and backend work seamlessly
+   * on the same domain in production (Render) and when served directly by FastAPI.
+   * Only falls back to local port 8000 when opened via file:// or a separate local static port.
+   */
+  getApiBase() {
+    const { protocol, hostname, port } = window.location;
+    if (protocol === 'file:') {
+      return 'http://127.0.0.1:8000';
+    }
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isSeparateStaticDevPort = ['3000', '5500', '5501', '8080'].includes(port);
+    if (isLocalHost && isSeparateStaticDevPort) {
+      return `http://${hostname}:8000`;
+    }
+    return '';
+  }
+};
+
+const API_BASE = FINPILOT_CONFIG.getApiBase();
+
+/**
+ * Format number as Indian Rupee (₹) with Indian numbering system (lakhs/crores)
+ */
+function formatINR(value, showDecimals = false) {
+  const num = Number(value || 0);
+  const isNegative = num < 0;
+  const absVal = Math.abs(num);
+  const formatted = absVal.toLocaleString('en-IN', {
+    minimumFractionDigits: showDecimals ? 2 : 0,
+    maximumFractionDigits: showDecimals ? 2 : 0,
+  });
+  return `${isNegative ? '-₹' : '₹'}${formatted}`;
+}
+
+/**
+ * Format compact INR for chart axes (e.g. ₹1.2L, ₹45k)
+ */
+function formatCompactINR(value) {
+  const num = Number(value || 0);
+  const sign = num < 0 ? '-' : '';
+  const abs = Math.abs(num);
+  if (abs >= 10000000) return `${sign}₹${(abs / 10000000).toFixed(2)}Cr`;
+  if (abs >= 100000) return `${sign}₹${(abs / 100000).toFixed(1)}L`;
+  if (abs >= 1000) return `${sign}₹${(abs / 1000).toFixed(0)}k`;
+  return `${sign}₹${abs.toFixed(0)}`;
+}
+
+/**
+ * Format ISO date YYYY-MM-DD into readable DD Mon YYYY
+ */
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const parts = String(dateStr).slice(0, 10).split('-');
+  if (parts.length !== 3) return dateStr;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Unified Fetch Wrapper with Relative API URL Support & Error Handling
+ */
+async function apiRequest(endpoint, options = {}) {
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${normalizedEndpoint}`;
+  const defaultHeaders = {};
+  if (!(options.body instanceof FormData)) {
+    defaultHeaders['Content-Type'] = 'application/json';
+  }
+  const config = {
+    ...options,
+    headers: {
+      ...defaultHeaders,
+      ...(options.headers || {}),
+    },
+  };
+
+  const response = await fetch(url, config);
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (_) {
+    data = null;
+  }
+
+  if (!response.ok) {
+    const errMsg =
+      (data && (data.detail || data.message)) ||
+      `Request failed with status ${response.status}`;
+    throw new Error(errMsg);
+  }
+  return data;
+}
+
+/**
+ * Display Toast Notification
+ */
+function showToast(message, type = 'info') {
+  let container = document.getElementById('toastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+    <span>${escapeHtml(message)}</span>
+    <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;">&times;</button>
+  </div>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(8px)';
+      setTimeout(() => toast.remove(), 220);
+    }
+  }, 4200);
+}
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * Configure Chart.js Global Dark Theme
+ */
+function configureChartDefaults() {
+  if (typeof Chart === 'undefined') return;
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.plugins.legend.labels.usePointStyle = true;
+  Chart.defaults.plugins.legend.labels.boxWidth = 8;
+  Chart.defaults.scale.grid.color = 'rgba(148, 163, 184, 0.08)';
+}
+
+/**
+ * Category Color Palette
+ */
+const CATEGORY_COLORS = {
+  'Food': '#3b82f6',
+  'Shopping': '#8b5cf6',
+  'Rent': '#06b6d4',
+  'EMI and Loans': '#f43f5e',
+  'Transportation': '#10b981',
+  'Utilities': '#f59e0b',
+  'Healthcare': '#ec4899',
+  'Entertainment': '#6366f1',
+  'Education': '#14b8a6',
+  'Salary': '#22c55e',
+  'Freelance Income': '#38bdf8',
+  'Other': '#64748b',
+};
+
+function getCategoryColor(cat) {
+  return CATEGORY_COLORS[cat] || '#3b82f6';
+}
+
+/**
+ * Seed / Reset Demo Data Handler
+ */
+async function handleSeedDemoData(reloadCallback) {
+  try {
+    showToast('Seeding realistic Indian Rupee (₹) demo data...', 'info');
+    const res = await apiRequest('/api/transactions/seed-demo', { method: 'POST' });
+    showToast(
+      `Seeded ${res.seeded_transactions} demo transactions & ${res.detected_recurring_streams} recurring streams!`,
+      'success'
+    );
+    await refreshSidebarStatus();
+    if (typeof reloadCallback === 'function') {
+      await reloadCallback();
+    } else {
+      window.location.reload();
+    }
+  } catch (err) {
+    showToast(`Failed to seed demo data: ${err.message}`, 'error');
+  }
+}
+
+/**
+ * Clear Demo Data Handler (preserves user-entered transactions)
+ */
+async function handleClearDemoData(reloadCallback) {
+  try {
+    const res = await apiRequest('/api/transactions/demo', { method: 'DELETE' });
+    showToast(
+      `Cleared ${res.deleted_demo_transactions} demo transactions. (${res.remaining_user_transactions} user transactions kept).`,
+      'info'
+    );
+    await refreshSidebarStatus();
+    if (typeof reloadCallback === 'function') {
+      await reloadCallback();
+    } else {
+      window.location.reload();
+    }
+  } catch (err) {
+    showToast(`Failed to clear demo data: ${err.message}`, 'error');
+  }
+}
+
+/**
+ * Refresh API Health & Sidebar Dataset Status
+ */
+async function refreshSidebarStatus() {
+  const apiStatusEl = document.getElementById('apiStatusPill');
+  const dataCountsEl = document.getElementById('sidebarDataCounts');
+  const dataBadgeEl = document.getElementById('sidebarDataBadge');
+
+  try {
+    const health = await apiRequest('/api/health');
+    if (apiStatusEl) {
+      apiStatusEl.innerHTML = `<span class="status-dot"></span> API Online`;
+      apiStatusEl.style.color = '#34d399';
+    }
+    if (dataCountsEl) {
+      dataCountsEl.textContent = `${health.transactions_count || 0} Total (${health.user_transactions_count || 0} User • ${health.demo_transactions_count || 0} Demo)`;
+    }
+    if (dataBadgeEl) {
+      if (health.demo_transactions_count > 0 && health.user_transactions_count > 0) {
+        dataBadgeEl.textContent = 'Hybrid Mode';
+        dataBadgeEl.className = 'badge badge-info';
+      } else if (health.demo_transactions_count > 0) {
+        dataBadgeEl.textContent = 'Demo Active';
+        dataBadgeEl.className = 'badge badge-demo';
+      } else if (health.user_transactions_count > 0) {
+        dataBadgeEl.textContent = 'User Data';
+        dataBadgeEl.className = 'badge badge-user';
+      } else {
+        dataBadgeEl.textContent = 'Empty DB';
+        dataBadgeEl.className = 'badge badge-neutral';
+      }
+    }
+    return health;
+  } catch (err) {
+    if (apiStatusEl) {
+      apiStatusEl.innerHTML = `<span class="status-dot" style="background:#f43f5e;box-shadow:0 0 8px #f43f5e;"></span> API Offline`;
+      apiStatusEl.style.color = '#fb7185';
+    }
+    if (dataBadgeEl) {
+      dataBadgeEl.textContent = 'API Offline';
+      dataBadgeEl.className = 'badge badge-danger';
+    }
+    if (dataCountsEl) {
+      dataCountsEl.textContent = 'Backend unreachable on /api/health';
+    }
+    return null;
+  }
+}
+
+/**
+ * Initialize Mobile Sidebar Toggle & Shared Shell
+ */
+function initSharedShell() {
+  configureChartDefaults();
+  refreshSidebarStatus();
+
+  const menuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('appSidebar');
+  if (menuBtn && sidebar) {
+    menuBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+  }
+
+  // Close modals when clicking backdrop
+  document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) {
+        backdrop.classList.remove('open');
+      }
+    });
+  });
+}
+
+function openModal(modalId) {
+  const el = document.getElementById(modalId);
+  if (el) el.classList.add('open');
+}
+
+function closeModal(modalId) {
+  const el = document.getElementById(modalId);
+  if (el) el.classList.remove('open');
+}
+
+/**
+ * Feature #2: Indian Bank / UPI SMS Auto-Reader Helpers
+ */
+function fillSampleSms(smsText) {
+  const input = document.getElementById('smsInputText');
+  if (!input) return;
+  input.value = smsText;
+  previewSmsParse();
+}
+
+async function previewSmsParse() {
+  const input = document.getElementById('smsInputText');
+  const preview = document.getElementById('smsParsedPreview');
+  if (!input || !preview) return;
+
+  const text = input.value.trim();
+  if (text.length < 6) {
+    preview.textContent = 'Parsed details (Merchant, ₹ Amount, Bank, Category) will appear here automatically.';
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-sms', {
+      method: 'POST',
+      body: JSON.stringify({ sms_text: text, auto_save: false }),
+    });
+    const p = res.parsed;
+    preview.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span><strong>${escapeHtml(p.detected_bank)}</strong> • ${escapeHtml(p.type.toUpperCase())}: <strong>${formatINR(p.amount, true)}</strong></span>
+        <span class="badge badge-info">${escapeHtml(p.category)}</span>
+      </div>
+      <div style="margin-top:4px;color:var(--text-secondary);">
+        Merchant: <strong>${escapeHtml(p.merchant)}</strong> • Date: <strong>${formatDate(p.date)}</strong> • Mode: ${escapeHtml(p.payment_method)}
+      </div>
+    `;
+  } catch (err) {
+    preview.textContent = `SMS Parser Note: ${err.message}`;
+  }
+}
+
+async function submitSmsTransaction(autoSave = true) {
+  const input = document.getElementById('smsInputText');
+  if (!input || !input.value.trim()) {
+    showToast('Please paste an SMS or click one of the sample bank alerts first.', 'error');
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-sms', {
+      method: 'POST',
+      body: JSON.stringify({ sms_text: input.value.trim(), auto_save: autoSave }),
+    });
+    showToast(res.message, 'success');
+    input.value = '';
+    closeModal('smsReaderModal');
+    await refreshSidebarStatus();
+    if (typeof loadDashboardData === 'function') await loadDashboardData();
+    if (typeof loadTransactionsPage === 'function') await loadTransactionsPage();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+/**
+ * Feature #7: Voice Expense Entry (English + Hinglish + Web Speech API)
+ */
+function fillSampleVoice(phrase) {
+  const input = document.getElementById('voiceInputText');
+  if (!input) return;
+  input.value = phrase;
+  previewVoiceParse();
+}
+
+async function previewVoiceParse() {
+  const input = document.getElementById('voiceInputText');
+  const preview = document.getElementById('voiceParsedPreview');
+  if (!input || !preview) return;
+
+  const text = input.value.trim();
+  if (text.length < 4) {
+    preview.textContent = 'Voice AI Parser Ready: Extracts ₹ Amount, Merchant, Relative Date (Today/Kal/Yesterday), and Category.';
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-voice', {
+      method: 'POST',
+      body: JSON.stringify({ transcript: text, auto_save: false }),
+    });
+    const p = res.parsed;
+    preview.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span><strong>${escapeHtml(p.description)}</strong> (${escapeHtml(p.type.toUpperCase())}): <strong>${formatINR(p.amount, true)}</strong></span>
+        <span class="badge badge-success">${escapeHtml(p.category)}</span>
+      </div>
+      <div style="margin-top:4px;color:var(--text-secondary);">
+        Date: <strong>${formatDate(p.date)} (${escapeHtml(p.date_label)})</strong> • ${escapeHtml(p.categorization_reason)}
+      </div>
+    `;
+  } catch (err) {
+    preview.textContent = `Voice Parser Note: ${err.message}`;
+  }
+}
+
+function startBrowserVoiceRecognition() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = document.getElementById('startMicBtn');
+  const input = document.getElementById('voiceInputText');
+
+  if (!SpeechRecognition) {
+    showToast('Browser Speech API not supported in this window — use the sample Hinglish chips or type your phrase!', 'info');
+    return;
+  }
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-IN';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  if (micBtn) {
+    micBtn.textContent = '🔴 Listening...';
+  }
+
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    if (input) {
+      input.value = transcript;
+      previewVoiceParse();
+    }
+    showToast(`Heard: "${transcript}"`, 'success');
+  };
+
+  recognition.onerror = () => {
+    showToast('Microphone capture ended or blocked — click any sample Hinglish chip to test!', 'info');
+  };
+
+  recognition.onend = () => {
+    if (micBtn) {
+      micBtn.textContent = '🎙️ Speak Now';
+    }
+  };
+
+  recognition.start();
+}
+
+async function submitVoiceTransaction(autoSave = true) {
+  const input = document.getElementById('voiceInputText');
+  if (!input || !input.value.trim()) {
+    showToast('Please speak or select a sample Hinglish voice command first.', 'error');
+    return;
+  }
+
+  try {
+    const res = await apiRequest('/api/transactions/parse-voice', {
+      method: 'POST',
+      body: JSON.stringify({ transcript: input.value.trim(), auto_save: autoSave }),
+    });
+    showToast(res.message, 'success');
+    input.value = '';
+    closeModal('voiceEntryModal');
+    await refreshSidebarStatus();
+    if (typeof loadDashboardData === 'function') await loadDashboardData();
+    if (typeof loadTransactionsPage === 'function') await loadTransactionsPage();
+  } catch (err) {
+    showToast(err.message, 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initSharedShell);

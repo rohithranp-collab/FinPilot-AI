@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transactions & CSV Import – FinPilot AI</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="appSidebar">
+      <a href="index.html" class="sidebar-brand">
+        <div class="brand-logo">FP</div>
+        <div class="brand-text">
+          <h1>FinPilot AI</h1>
+          <span>Financial OS</span>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Core Platform</div>
+        <a href="index.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Overview Home</span>
+        </a>
+        <a href="dashboard.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span>Executive Dashboard</span>
+        </a>
+        <a href="transactions.html" class="nav-link active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>Transactions & CSV</span>
+        </a>
+        <a href="analytics.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Analytics & Recurring</span>
+        </a>
+
+        <div class="nav-section-label">AI Intelligence</div>
+        <a href="predictions.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Cash Flow & Anomalies</span>
+        </a>
+        <a href="recommendations.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>AI Recommendations</span>
+        </a>
+        <a href="simulations.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Financial Simulations</span>
+        </a>
+        <a href="assistant.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>AI Financial Assistant</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="data-mode-card">
+          <div class="data-mode-header">
+            <span>Dataset Status</span>
+            <span class="badge badge-demo" id="sidebarDataBadge">Loading...</span>
+          </div>
+          <div class="data-mode-counts" id="sidebarDataCounts">Checking SQLite DB...</div>
+          <div class="data-mode-actions">
+            <button class="btn btn-secondary btn-xs" style="flex:1;" onclick="handleSeedDemoData(loadTransactionsPage)">Seed Demo</button>
+            <button class="btn btn-danger btn-xs" style="flex:1;" onclick="handleClearDemoData(loadTransactionsPage)">Clear Demo</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">☰</button>
+          <div class="page-title-group">
+            <h2>Transaction Management & Smart Categorizer</h2>
+            <p>Add, Edit, Delete, Filter & Bulk Import Transactions with Explainable AI Categorization</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="api-pill" id="apiStatusPill"><span class="status-dot"></span> Connecting...</span>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('smsReaderModal')">📱 UPI SMS Reader</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('voiceEntryModal')">🎙️ Voice (Hinglish)</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('csvImportModal')">↑ Import CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportFilteredTransactionsCsv()">↓ Export CSV</button>
+          <button class="btn btn-primary btn-sm" onclick="openCreateTransactionModal()">+ Add Transaction</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <!-- Filtered Summary KPI Strip -->
+        <section class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-top">
+              <span class="kpi-label">Matching Records</span>
+              <div class="kpi-icon">#</div>
+            </div>
+            <div class="kpi-value" id="txFilteredCount">0 Transactions</div>
+            <div class="kpi-sub" id="txDatasetSub">0 User • 0 Demo</div>
+          </div>
+
+          <div class="kpi-card income">
+            <div class="kpi-top">
+              <span class="kpi-label">Filtered Income</span>
+              <div class="kpi-icon">+</div>
+            </div>
+            <div class="kpi-value" id="txFilteredIncome">₹0</div>
+            <div class="kpi-sub"><span>Sum of matching credits</span></div>
+          </div>
+
+          <div class="kpi-card expense">
+            <div class="kpi-top">
+              <span class="kpi-label">Filtered Expenses</span>
+              <div class="kpi-icon">-</div>
+            </div>
+            <div class="kpi-value" id="txFilteredExpense">₹0</div>
+            <div class="kpi-sub"><span>Sum of matching debits</span></div>
+          </div>
+
+          <div class="kpi-card savings">
+            <div class="kpi-top">
+              <span class="kpi-label">Filtered Net Cash Flow</span>
+              <div class="kpi-icon">∑</div>
+            </div>
+            <div class="kpi-value" id="txFilteredNet">₹0</div>
+            <div class="kpi-sub"><span>Income minus Expenses</span></div>
+          </div>
+        </section>
+
+        <!-- Search & Filter Bar -->
+        <section class="filter-bar">
+          <div class="form-group">
+            <label class="form-label">Search Merchant / Description</label>
+            <input type="text" id="filterSearch" class="form-control" placeholder="Search e.g. Swiggy, Rent, Salary, EMI..." oninput="loadTransactionsPage()" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select id="filterType" class="form-control" onchange="loadTransactionsPage()">
+              <option value="all">All Types</option>
+              <option value="expense">Expense Only</option>
+              <option value="income">Income Only</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select id="filterCategory" class="form-control" onchange="loadTransactionsPage()">
+              <option value="All">All Categories (12)</option>
+              <option value="Food">Food</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Transportation">Transportation</option>
+              <option value="Healthcare">Healthcare</option>
+              <option value="Entertainment">Entertainment</option>
+              <option value="Education">Education</option>
+              <option value="Rent">Rent</option>
+              <option value="Utilities">Utilities</option>
+              <option value="EMI and Loans">EMI and Loans</option>
+              <option value="Salary">Salary</option>
+              <option value="Freelance Income">Freelance Income</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Data Source</label>
+            <select id="filterDataSource" class="form-control" onchange="loadTransactionsPage()">
+              <option value="all">All (User + Demo)</option>
+              <option value="user">User-Entered Only</option>
+              <option value="demo">Demo Data Only</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">From Date</label>
+            <input type="date" id="filterStartDate" class="form-control" onchange="loadTransactionsPage()" />
+          </div>
+
+          <div class="form-group" style="display:flex;flex-direction:row;gap:8px;align-items:flex-end;">
+            <div style="flex:1;">
+              <label class="form-label" style="display:block;margin-bottom:6px;">To Date</label>
+              <input type="date" id="filterEndDate" class="form-control" onchange="loadTransactionsPage()" />
+            </div>
+            <button class="btn btn-secondary" onclick="resetTransactionFilters()">Reset</button>
+          </div>
+        </section>
+
+        <!-- Transaction Ledger Table -->
+        <section class="card" style="margin-bottom:0;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Complete Transaction Ledger</div>
+              <div class="card-subtitle">Every transaction displays its AI categorization rationale and data origin badge</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary btn-sm" onclick="openModal('csvImportModal')">Bulk CSV Import</button>
+              <button class="btn btn-primary btn-sm" onclick="openCreateTransactionModal()">+ New Transaction</button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description & AI Classification Explanation</th>
+                  <th>Category</th>
+                  <th>Type</th>
+                  <th>Mode & Source</th>
+                  <th>Amount (₹)</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="transactionsTableBody">
+                <tr><td colspan="7" class="empty-state">Loading transactions...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add / Edit Transaction Modal -->
+  <div class="modal-backdrop" id="transactionFormModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="txModalTitle">Add New Transaction</h3>
+        <button class="modal-close" onclick="closeModal('transactionFormModal')">&times;</button>
+      </div>
+      <form onsubmit="submitTransactionForm(event)">
+        <input type="hidden" id="txFormId" />
+        <div class="modal-body">
+          <div class="grid-2" style="margin-bottom:14px;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Transaction Date</label>
+              <input type="date" id="txFormDate" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount in ₹ (INR)</label>
+              <input type="number" step="0.01" min="1" id="txFormAmount" class="form-control" placeholder="e.g. 1499" oninput="handleLiveCategoryPreview()" required />
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">Merchant / Narration / Description</label>
+            <input type="text" id="txFormDesc" class="form-control" placeholder="e.g. Zomato Dinner, BESCOM Electricity, Upwork Freelance" oninput="handleLiveCategoryPreview()" required />
+            <div class="ai-preview-box" id="txAiCategoryPreview">
+              Leave Category on "Auto (AI Categorization)" to let FinPilot AI automatically classify your transaction.
+            </div>
+          </div>
+
+          <div class="grid-3" style="margin-bottom:0;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Transaction Type</label>
+              <select id="txFormType" class="form-control" onchange="handleLiveCategoryPreview()">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="txFormCategory" class="form-control">
+                <option value="Auto">✨ Auto (AI Categorization)</option>
+                <option value="Food">Food</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Education">Education</option>
+                <option value="Rent">Rent</option>
+                <option value="Utilities">Utilities</option>
+                <option value="EMI and Loans">EMI and Loans</option>
+                <option value="Salary">Salary</option>
+                <option value="Freelance Income">Freelance Income</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Payment Method</label>
+              <select id="txFormMethod" class="form-control">
+                <option value="UPI / Bank">UPI / Bank</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="NEFT / Bank Transfer">NEFT / Bank Transfer</option>
+                <option value="ECS Auto-Debit">ECS Auto-Debit</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('transactionFormModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CSV Import Modal -->
+  <div class="modal-backdrop" id="csvImportModal">
+    <div class="modal-dialog" style="max-width:620px;">
+      <div class="modal-header">
+        <h3>Bulk Import Transactions via CSV</h3>
+        <button class="modal-close" onclick="closeModal('csvImportModal')">&times;</button>
+      </div>
+      <form onsubmit="submitCsvImport(event)">
+        <div class="modal-body">
+          <p style="font-size:0.84rem;color:var(--text-secondary);margin-bottom:14px;">
+            Upload a <code>.csv</code> file or paste CSV rows below. Supported columns:
+            <code>date, amount, description, type, category, payment_method</code>.
+            If <code>category</code> is omitted or set to <code>Auto</code>, FinPilot AI automatically categorizes each row!
+          </p>
+
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">Option 1: Select CSV File</label>
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" class="form-control" />
+          </div>
+
+          <div class="form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <label class="form-label">Option 2: Paste Raw CSV Content</label>
+              <button type="button" class="btn btn-secondary btn-xs" onclick="loadSampleCsvIntoTextarea()">
+                Load 5 Sample Indian Rupee Rows
+              </button>
+            </div>
+            <textarea id="csvRawTextInput" rows="7" class="form-control" style="font-family:var(--font-mono);font-size:0.78rem;" placeholder="date,amount,description,type,category&#10;2026-11-14,850,Swiggy Dinner Order,expense,Auto&#10;2026-11-14,45000,Client Consulting Payout,income,Auto"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('csvImportModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Import Transactions</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Feature #2: Indian Bank & UPI SMS Auto-Reader Modal -->
+  <div class="modal-backdrop" id="smsReaderModal">
+    <div class="modal-dialog" style="max-width:600px;">
+      <div class="modal-header">
+        <h3>📱 WhatsApp & Indian Bank / UPI SMS Auto-Reader</h3>
+        <button class="modal-close" onclick="closeModal('smsReaderModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.84rem;color:var(--text-secondary);margin-bottom:12px;">
+          Paste any forwarded HDFC, ICICI, SBI, Axis, or UPI SMS alert below — or click a sample Indian bank SMS to test instant extraction:
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+          <button type="button" class="prompt-chip" onclick="fillSampleSms('Rs. 640.00 debited from A/c XX4821 on 14-11-26 to VPA swiggy@axisbank (UPI Ref 63192837182). Not you? Call 18002586161 - HDFC Bank')">HDFC + Swiggy UPI</button>
+          <button type="button" class="prompt-chip" onclick="fillSampleSms('Dear Customer, Acct XX9012 is credited with INR 42,500.00 on 14-Nov-26 by NEFT-CLIENT CONSULTING MILESTONE. Avl Bal Rs. 2,00,589 - ICICI Bank')">ICICI NEFT Credit</button>
+          <button type="button" class="prompt-chip" onclick="fillSampleSms('Rs. 2,350 debited from SBI A/c XX3319 at INDIAN OIL PETROL PUMP on 14/11/2026 via UPI Ref 4329104921.')">SBI Fuel Debit</button>
+          <button type="button" class="prompt-chip" onclick="fillSampleSms('INR 1,899.00 spent on Axis Bank Card XX7741 at AMAZON PAY INDIA on 14-11-2026.')">Axis Card Amazon</button>
+        </div>
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label">Forwarded SMS / WhatsApp Bank Alert Text</label>
+          <textarea id="smsInputText" class="form-control" rows="3" placeholder="e.g. Rs. 500 debited from HDFC - Swiggy" oninput="previewSmsParse()"></textarea>
+        </div>
+        <div class="ai-preview-box" id="smsParsedPreview">
+          Parsed details (Merchant, ₹ Amount, Bank, Category) will appear here automatically.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('smsReaderModal')">Close</button>
+        <button type="button" class="btn btn-primary" onclick="submitSmsTransaction(true)">Parse & Save Transaction →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature #7: Voice Expense Entry (English + Hinglish) Modal -->
+  <div class="modal-backdrop" id="voiceEntryModal">
+    <div class="modal-dialog" style="max-width:580px;">
+      <div class="modal-header">
+        <h3>🎙️ Voice Expense Entry (English + Hinglish Support)</h3>
+        <button class="modal-close" onclick="closeModal('voiceEntryModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.84rem;color:var(--text-secondary);margin-bottom:12px;">
+          Click the microphone to speak in English or Hinglish, or click a sample voice phrase below:
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+          <button type="button" class="prompt-chip" onclick="fillSampleVoice('Add 500 rupees for Swiggy yesterday')">"Add 500 rupees for Swiggy yesterday"</button>
+          <button type="button" class="prompt-chip" onclick="fillSampleVoice('Kal Uber mein 350 rupaye kharch kiye')">"Kal Uber mein 350 rupaye kharch kiye"</button>
+          <button type="button" class="prompt-chip" onclick="fillSampleVoice('Aaj 1450 rupees Apollo Pharmacy medicines')">"Aaj 1450 rupees Apollo Pharmacy"</button>
+          <button type="button" class="prompt-chip" onclick="fillSampleVoice('Received 35000 rupees freelance payment today')">"Received 35000 freelance payment today"</button>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:12px;">
+          <input type="text" id="voiceInputText" class="form-control" placeholder="Speak or type e.g. 'Add 500 rupees for Swiggy yesterday'" oninput="previewVoiceParse()" />
+          <button type="button" class="btn btn-secondary" id="startMicBtn" onclick="startBrowserVoiceRecognition()" style="white-space:nowrap;">
+            🎙️ Speak Now
+          </button>
+        </div>
+        <div class="ai-preview-box" id="voiceParsedPreview">
+          Voice AI Parser Ready: Extracts ₹ Amount, Merchant, Relative Date (Today/Kal/Yesterday), and Category.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('voiceEntryModal')">Close</button>
+        <button type="button" class="btn btn-primary" onclick="submitVoiceTransaction(true)">Save Voice Transaction →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/transactions.js"></script>
+</body>
+</html>

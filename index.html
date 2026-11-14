@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinPilot AI – Personal Financial Operating System</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="appSidebar">
+      <a href="index.html" class="sidebar-brand">
+        <div class="brand-logo">FP</div>
+        <div class="brand-text">
+          <h1>FinPilot AI</h1>
+          <span>Financial OS</span>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Core Platform</div>
+        <a href="index.html" class="nav-link active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Overview Home</span>
+        </a>
+        <a href="dashboard.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span>Executive Dashboard</span>
+        </a>
+        <a href="transactions.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>Transactions & CSV</span>
+        </a>
+        <a href="analytics.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Analytics & Recurring</span>
+        </a>
+
+        <div class="nav-section-label">AI Intelligence</div>
+        <a href="predictions.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Cash Flow & Anomalies</span>
+        </a>
+        <a href="recommendations.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>AI Recommendations</span>
+        </a>
+        <a href="simulations.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Financial Simulations</span>
+        </a>
+        <a href="assistant.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>AI Financial Assistant</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="data-mode-card">
+          <div class="data-mode-header">
+            <span>Dataset Status</span>
+            <span class="badge badge-demo" id="sidebarDataBadge">Loading...</span>
+          </div>
+          <div class="data-mode-counts" id="sidebarDataCounts">Checking SQLite DB...</div>
+          <div class="data-mode-actions">
+            <button class="btn btn-secondary btn-xs" style="flex:1;" onclick="handleSeedDemoData(loadDashboardData)">Seed Demo</button>
+            <button class="btn btn-danger btn-xs" style="flex:1;" onclick="handleClearDemoData(loadDashboardData)">Clear Demo</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">☰</button>
+          <div class="page-title-group">
+            <h2>FinPilot AI Operating System</h2>
+            <p>Explainable AI Cash Flow Forecasting, Anomaly Detection & Financial Decision Intelligence</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="api-pill" id="apiStatusPill"><span class="status-dot"></span> Connecting...</span>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('quickAddTxModal')">+ Quick Transaction</button>
+          <a href="dashboard.html" class="btn btn-primary btn-sm">Open Full Dashboard →</a>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <!-- Hero Banner -->
+        <section class="hero-banner">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px;">
+            <div style="max-width:720px;">
+              <span class="badge badge-info" style="margin-bottom:12px;">AI-POWERED PERSONAL & SMB FINANCIAL OS</span>
+              <h1 style="font-size:2.1rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:12px;">
+                Intelligent Money Management, Predictive Cash Flow & Decision Simulation
+              </h1>
+              <p style="color:var(--text-secondary);font-size:0.96rem;margin-bottom:22px;">
+                FinPilot AI combines automated transaction categorization, recurring bill & EMI detection,
+                Scikit-Learn time-series forecasting with uncertainty bounds, statistical anomaly detection,
+                and interactive what-if financial simulations—backed by a live FastAPI + SQLite engine.
+              </p>
+              <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                <a href="dashboard.html" class="btn btn-primary">Launch Executive Dashboard</a>
+                <a href="transactions.html" class="btn btn-secondary">Manage Transactions & Import CSV</a>
+                <a href="simulations.html" class="btn btn-secondary">Run What-If Simulator</a>
+              </div>
+            </div>
+            <div style="background:rgba(6,11,25,0.65);border:1px solid var(--border-accent);border-radius:var(--radius-lg);padding:20px 24px;min-width:270px;">
+              <div style="font-size:0.76rem;color:var(--accent-cyan);font-weight:700;text-transform:uppercase;margin-bottom:6px;">
+                Live Portfolio Snapshot
+              </div>
+              <div class="kpi-value" id="kpiTotalBalance" style="font-size:1.85rem;">₹0</div>
+              <div id="kpiBalanceSub" style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:12px;">Loading health metrics...</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:10px;border-top:1px solid var(--border-subtle);font-size:0.8rem;">
+                <div>
+                  <span style="color:var(--text-secondary);display:block;">Total Income</span>
+                  <strong class="amount-income" id="kpiTotalIncome">₹0</strong>
+                </div>
+                <div>
+                  <span style="color:var(--text-secondary);display:block;">Total Expenses</span>
+                  <strong class="amount-expense" id="kpiTotalExpenses">₹0</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Platform Modules Grid -->
+        <div class="feature-grid" style="margin-bottom:28px;">
+          <div class="feature-card">
+            <div>
+              <span class="badge badge-info" style="margin-bottom:10px;">Module 01</span>
+              <h3 style="font-size:1.1rem;margin-bottom:8px;">Executive Financial Dashboard</h3>
+              <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:16px;">
+                Real-time net balance, monthly savings rate, 7D/30D/90D cash flow forecast chart, expense breakdown, upcoming bills, and live AI insights.
+              </p>
+            </div>
+            <a href="dashboard.html" class="btn btn-secondary btn-sm">Open Dashboard →</a>
+          </div>
+
+          <div class="feature-card">
+            <div>
+              <span class="badge badge-success" style="margin-bottom:10px;">Module 02</span>
+              <h3 style="font-size:1.1rem;margin-bottom:8px;">Smart Transactions & CSV Import</h3>
+              <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:16px;">
+                Add, edit, delete, and bulk-import CSV transactions with explainable Rule-Based + TF-IDF Machine Learning auto-categorization across 12 categories.
+              </p>
+            </div>
+            <a href="transactions.html" class="btn btn-secondary btn-sm">Manage Transactions →</a>
+          </div>
+
+          <div class="feature-card">
+            <div>
+              <span class="badge badge-warning" style="margin-bottom:10px;">Module 03</span>
+              <h3 style="font-size:1.1rem;margin-bottom:8px;">Deep Analytics & Recurring Engine</h3>
+              <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:16px;">
+                Automatically detects monthly subscriptions, utility bills, regular salary credits, and EMIs with next payment date and confidence scoring.
+              </p>
+            </div>
+            <a href="analytics.html" class="btn btn-secondary btn-sm">Explore Analytics →</a>
+          </div>
+
+          <div class="feature-card">
+            <div>
+              <span class="badge badge-info" style="margin-bottom:10px;">Module 04</span>
+              <h3 style="font-size:1.1rem;margin-bottom:8px;">Cash Flow Forecasting & Accuracy</h3>
+              <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:16px;">
+                7-day, 30-day, and 90-day balance projections with √t uncertainty cones and out-of-sample walk-forward MAE & MAPE accuracy auditing.
+              </p>
+            </div>
+            <a href="predictions.html" class="btn btn-secondary btn-sm">View Forecasts & Accuracy →</a>
+          </div>
+
+          <div class="feature-card">
+            <div>
+              <span class="badge badge-danger" style="margin-bottom:10px;">Module 05</span>
+              <h3 style="font-size:1.1rem;margin-bottom:8px;">AI Recommendations & Budgets</h3>
+              <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:16px;">
+                Personalized category spending limits, excessive spend alerts, upcoming bill warnings, and quantified monthly rupee saving opportunities.
+              </p>
+            </div>
+            <a href="recommendations.html" class="btn btn-secondary btn-sm">View Recommendations →</a>
+          </div>
+
+          <div class="feature-card">
+            <div>
+              <span class="badge badge-user" style="margin-bottom:10px;">Module 06</span>
+              <h3 style="font-size:1.1rem;margin-bottom:8px;">What-If Financial Simulator</h3>
+              <p style="font-size:0.86rem;color:var(--text-secondary);margin-bottom:16px;">
+                Simulate large purchases, new loan EMIs, loan prepayments, savings targets, and recurring lifestyle upgrades before committing your money.
+              </p>
+            </div>
+            <a href="simulations.html" class="btn btn-secondary btn-sm">Launch Simulator →</a>
+          </div>
+        </div>
+
+        <!-- Live Interactive Preview Charts & AI Insights -->
+        <div class="grid-charts">
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Live Cash Flow Forecast Preview</div>
+                <div class="card-subtitle">Hybrid Recurring-Schedule + Ridge Regression Trajectory</div>
+              </div>
+              <div class="tab-group">
+                <button class="tab-btn" onclick="switchDashboardForecastHorizon(7, this)">7D</button>
+                <button class="tab-btn active" onclick="switchDashboardForecastHorizon(30, this)">30D</button>
+                <button class="tab-btn" onclick="switchDashboardForecastHorizon(90, this)">90D</button>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="cashflowForecastChart"></canvas>
+            </div>
+            <div id="forecastQuickSummary"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Explainable AI Financial Insights</div>
+                <div class="card-subtitle">Dynamically calculated from stored SQLite transactions</div>
+              </div>
+            </div>
+            <div class="insight-list" id="aiInsightsList">
+              <div class="empty-state">Loading AI insights...</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Quick Add Transaction Modal -->
+  <div class="modal-backdrop" id="quickAddTxModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Quick Add Transaction</h3>
+        <button class="modal-close" onclick="closeModal('quickAddTxModal')">&times;</button>
+      </div>
+      <form onsubmit="submitDashboardQuickTransaction(event)">
+        <div class="modal-body">
+          <div class="grid-2" style="margin-bottom:14px;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Date</label>
+              <input type="date" id="quickTxDate" class="form-control" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Amount (₹ INR)</label>
+              <input type="number" step="0.01" min="1" id="quickTxAmount" class="form-control" placeholder="e.g. 850" required />
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">Merchant / Description</label>
+            <input type="text" id="quickTxDesc" class="form-control" placeholder="e.g. Swiggy Dinner Order, Uber Cab, Monthly Salary" oninput="previewQuickCategorization()" required />
+            <div class="ai-preview-box" id="quickAiPreview">
+              AI Auto-Categorizer: Type a description to preview automatic categorization.
+            </div>
+          </div>
+          <div class="grid-3" style="margin-bottom:0;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select id="quickTxType" class="form-control" onchange="previewQuickCategorization()">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select id="quickTxCategory" class="form-control">
+                <option value="Auto">✨ Auto (AI Categorize)</option>
+                <option value="Food">Food</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Education">Education</option>
+                <option value="Rent">Rent</option>
+                <option value="Utilities">Utilities</option>
+                <option value="EMI and Loans">EMI and Loans</option>
+                <option value="Salary">Salary</option>
+                <option value="Freelance Income">Freelance Income</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Payment Mode</label>
+              <select id="quickTxMethod" class="form-control">
+                <option value="UPI / Bank">UPI / Bank</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="NEFT / RTGS">NEFT / RTGS</option>
+                <option value="ECS Auto-Debit">ECS Auto-Debit</option>
+                <option value="Cash">Cash</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('quickAddTxModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>
