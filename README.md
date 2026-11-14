@@ -1,6 +1,6 @@
-# FinPilot AI – Personal Financial Operating System
+# AI-Powered Personal Financial Operating System - Predictive Cash Flow Management (FinPilot AI)
 
-**FinPilot AI** is a full-stack, AI-powered financial management and decision intelligence platform designed for individuals and small businesses. It automates transaction categorization, detects recurring obligations (subscriptions, bills, regular income, and EMIs), forecasts 7-day, 30-day, and 90-day cash flows with statistical uncertainty bands, audits its own prediction accuracy, flags spending anomalies, generates data-backed saving recommendations, and simulates what-if financial decisions.
+**FinPilot AI** is a full-stack, AI-powered personal financial operating system and predictive cash flow management platform designed for individuals, freelancers, and small businesses in India (`₹ INR`). It automates transaction categorization, parses Indian bank/UPI SMS alerts and Hinglish voice commands, detects recurring obligations and subscription price hikes, forecasts 7-day, 30-day, and 90-day cash flows with Monte Carlo uncertainty bands and SHAP-style explainability, audits its own walk-forward prediction accuracy (`MAE / RMSE / MAPE`), flags spending anomalies with interactive story cards, computes a 0–1000 CIBIL-style financial health score, tracks Small Business GST Input Tax Credit (`18% ITC`), and simulates what-if financial decisions.
 
 ---
 
@@ -91,9 +91,35 @@ FinPilot-AI/
 6. **Personalized Budgets, Recommendations & Simulations (`recommendations.py`, `simulation.py`)**
    - Generates adaptive monthly category spending limits (`FinancialBudgets`), quantifies monthly rupee savings opportunities, warns of upcoming bills within 14 days, and simulates 5 scenario types (`large_purchase`, `monthly_emi`, `loan_repayment`, `savings_target`, `additional_expense`).
 
+7. **12 Unique Hackathon-Winning Smart Financial OS Features (`hackathon_features.py`, `sms_voice_parser.py`)**
+   - **Auto-Subscription Killer + Price Hike Detector**: Flags subscription rate increases, unused 60-day subscriptions, total annual waste (`₹`), and 1-click cancellation.
+   - **WhatsApp + Indian Bank / UPI SMS Auto-Reader**: Regex + merchant parser for HDFC, ICICI, SBI, Axis, Kotak, and UPI VPA SMS messages (`POST /api/transactions/parse-sms`).
+   - **Salary Delay & Freelance Income Uncertainty Engine**: 500-iteration Monte Carlo simulation predicting income arrival date probabilities and `P10 / P50 / P90` confidence bands.
+   - **"What-If" Financial Twin Simulator**: Baseline vs. Post-Decision cashflow overlay with Cash Runway impact (`days before → days after`) and optimal timing advice.
+   - **Explainable AI Card (SHAP-Style Attribution)**: Breaks down every forecast into exact `%` impact drivers and plain-English explanations.
+   - **Liquidity Panic Button + Auto Runway Saver**: Emergency alert card with 3 actionable 1-click runway rescue options when 15-day balance drops below threshold.
+   - **Voice Expense Entry with Hinglish Support**: Web Speech API + Hinglish NLP parser (`"Add 500 rupees for Swiggy yesterday"`, `"Kal Uber mein 350 rupaye kharch kiye"`).
+   - **Anomaly Story Mode**: Conversational outlier cards with interactive `[Yes, Planned]` and `[Keep Flagged]` buttons.
+   - **Financial Health Score (0–1000 CIBIL-Style Speedometer)**: Weighted 0–1000 gauge (`40% savings + 25% liquidity + 20% discipline + 15% stability`).
+   - **Prediction Accuracy Leaderboard**: Walk-forward 80/20 backtest chart (`Actual vs. Predicted`) with live `Accuracy %`, `MAE`, `RMSE`, and `MAPE`.
+   - **Small Business Mode – GST & Vendor Intelligence**: Tracks `18%` GST Input Tax Credit (`ITC`) claimable, GSTR-1/3B filing countdown, top vendors, and Accounting Profit vs. Real Cashflow.
+   - **Festival-Adaptive Auto-Budget**: Indian cultural calendar engine (Diwali, Holi, Eid, Pongal, Onam, Navratri, Wedding Season) that auto-adjusts festive budgets.
+
 ---
 
-## 4. REST API Endpoints
+## 4. Screenshots & UI Preview
+
+| View | Highlights |
+| :--- | :--- |
+| **Executive Dashboard (`/dashboard.html`)** | 0–1000 CIBIL Health Speedometer, 30D/90D Cash Flow Forecast Cone, SHAP Explainable AI Card, Monte Carlo Income Uncertainty, Auto-Subscription Killer, Small Business GST Mode, UPI SMS & Hinglish Voice Modals |
+| **Transactions Ledger (`/transactions.html`)** | Live AI Categorizer Preview, UPI SMS Auto-Reader, Hinglish Voice Input, Multi-Filter Search, CSV Import/Export |
+| **Forecasts & Backtest (`/predictions.html`)** | 7D/30D/90D Cash Flow Cones, Walk-Forward Backtest (`MAE / RMSE / MAPE`), Isolation Forest Anomaly Feed |
+| **What-If Simulator (`/simulations.html`)** | Financial Twin Overlay Chart, Cash Runway Impact (`Days Before → Days After`), Optimal Purchase Timing |
+| **Gemini AI Copilot (`/assistant.html`)** | Context-Aware Indian Rupee (`₹`) Financial Assistant powered by Google Gemini API |
+
+---
+
+## 5. REST API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |

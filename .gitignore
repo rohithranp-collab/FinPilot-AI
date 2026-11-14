@@ -1,8 +1,14 @@
-# Virtual Environments
+# Virtual Environments & Node/Frontend Build Artifacts
 .venv/
 venv/
 env/
 ENV/
+node_modules/
+.next/
+out/
+.prophet/
+.prisma/
+prisma/migrations/
 
 # Python Bytecode & Caches
 __pycache__/
