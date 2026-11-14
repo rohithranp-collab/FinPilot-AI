@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Simulations – FinPilot AI</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="appSidebar">
+      <a href="index.html" class="sidebar-brand">
+        <div class="brand-logo">FP</div>
+        <div class="brand-text">
+          <h1>FinPilot AI</h1>
+          <span>Financial OS</span>
+        </div>
+      </a>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Core Platform</div>
+        <a href="index.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Overview Home</span>
+        </a>
+        <a href="dashboard.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+          <span>Executive Dashboard</span>
+        </a>
+        <a href="transactions.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span>Transactions & CSV</span>
+        </a>
+        <a href="analytics.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <span>Analytics & Recurring</span>
+        </a>
+
+        <div class="nav-section-label">AI Intelligence</div>
+        <a href="predictions.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          <span>Cash Flow & Anomalies</span>
+        </a>
+        <a href="recommendations.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span>AI Recommendations</span>
+        </a>
+        <a href="simulations.html" class="nav-link active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span>Financial Simulations</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="data-mode-card">
+          <div class="data-mode-header">
+            <span>Dataset Status</span>
+            <span class="badge badge-demo" id="sidebarDataBadge">Loading...</span>
+          </div>
+          <div class="data-mode-counts" id="sidebarDataCounts">Checking SQLite DB...</div>
+          <div class="data-mode-actions">
+            <button class="btn btn-secondary btn-xs" style="flex:1;" onclick="handleSeedDemoData(loadSimulationsPage)">Seed Demo</button>
+            <button class="btn btn-danger btn-xs" style="flex:1;" onclick="handleClearDemoData(loadSimulationsPage)">Clear Demo</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle Menu">☰</button>
+          <div class="page-title-group">
+            <h2>What-If Financial Decision Simulator</h2>
+            <p>Simulate Large Purchases, Loan Repayments, Monthly EMIs, Savings Targets & Additional Expenses</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="api-pill" id="apiStatusPill"><span class="status-dot"></span> Connecting...</span>
+          <button class="btn btn-secondary btn-sm" onclick="loadSimulationsPage()">↻ Reload History</button>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <!-- Quick Scenario Preset Bar -->
+        <div class="card" style="padding:16px 22px;margin-bottom:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <span style="font-size:0.84rem;font-weight:600;color:var(--text-secondary);">Quick Scenario Templates:</span>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <button type="button" class="btn btn-secondary btn-xs" onclick="applySimulationPreset('large_purchase')">1. Large Purchase (₹1.2L)</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick="applySimulationPreset('monthly_emi')">2. Monthly Loan EMI (₹2.4L)</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick="applySimulationPreset('loan_repayment')">3. Loan Prepayment (₹1.8L)</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick="applySimulationPreset('savings_target')">4. Savings Target (₹3.5L)</button>
+              <button type="button" class="btn btn-secondary btn-xs" onclick="applySimulationPreset('additional_expense')">5. Additional Expense (+₹12k/mo)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-charts" style="grid-template-columns:1fr 1.6fr;">
+          <!-- Left: Simulation Input Form -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Configure Financial Decision</div>
+                <div class="card-subtitle">Test impact against your real baseline cash flow</div>
+              </div>
+            </div>
+
+            <form onsubmit="submitSimulationForm(event)">
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Scenario Name</label>
+                <input type="text" id="simName" class="form-control" value="MacBook Pro M4 / Workstation Upgrade" required />
+              </div>
+
+              <div class="form-group" style="margin-bottom:14px;">
+                <label class="form-label">Decision Type</label>
+                <select id="simScenarioType" class="form-control" onchange="updateScenarioFieldLabels()">
+                  <option value="large_purchase">1. Large Purchase (One-Time Outlay)</option>
+                  <option value="monthly_emi" selected>2. Monthly EMI (Financed Loan / Asset)</option>
+                  <option value="loan_repayment">3. Loan Repayment (Prepayment / Extra EMI)</option>
+                  <option value="savings_target">4. Savings Target (Goal Accumulation)</option>
+                  <option value="additional_expense">5. Additional Monthly Expense (Lifestyle / Rent)</option>
+                </select>
+              </div>
+
+              <div class="grid-2" style="margin-bottom:14px;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label" id="simAmountLabel">Total Asset / Loan Price (₹)</label>
+                  <input type="number" step="500" min="500" id="simTotalAmount" class="form-control" value="165000" required />
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Horizon / Tenure (Months)</label>
+                  <input type="number" min="1" max="120" id="simDurationMonths" class="form-control" value="12" required />
+                </div>
+              </div>
+
+              <div class="grid-2" style="margin-bottom:14px;gap:12px;">
+                <div class="form-group">
+                  <label class="form-label" id="simDownLabel">Upfront Down Payment (₹)</label>
+                  <input type="number" step="500" min="0" id="simDownPayment" class="form-control" value="35000" />
+                </div>
+                <div class="form-group" id="simRateGroup">
+                  <label class="form-label">Annual Rate (% p.a.)</label>
+                  <input type="number" step="0.1" min="0" max="45" id="simInterestRate" class="form-control" value="11.5" />
+                </div>
+              </div>
+
+              <div class="form-group" id="simExtraGroup" style="margin-bottom:16px;display:none;">
+                <label class="form-label">Extra Monthly Loan Prepayment (₹/month)</label>
+                <input type="number" step="500" min="0" id="simExtraMonthly" class="form-control" value="0" />
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width:100%;padding:12px;">
+                ⚡ Run Financial Simulation
+              </button>
+            </form>
+          </div>
+
+          <!-- Right: Simulation Results & Trajectory Chart -->
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="simResultTitle">Simulation Impact Analysis</div>
+                <div class="card-subtitle" id="simResultSummaryLine">Run or select a simulation to compare before vs after balances</div>
+              </div>
+              <span class="badge badge-info" id="simResultRiskBadge">Ready</span>
+            </div>
+
+            <!-- Before vs After KPI Cards -->
+            <div class="grid-2" style="margin-bottom:16px;gap:14px;">
+              <div style="background:rgba(10,18,38,0.65);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;">
+                <div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Projected Balance (Before Decision)</div>
+                <div class="kpi-value" id="simBalBefore" style="font-size:1.4rem;margin:4px 0;">₹0</div>
+                <div style="font-size:0.76rem;color:var(--text-secondary);" id="simSubBefore">Baseline trajectory</div>
+              </div>
+
+              <div style="background:rgba(10,18,38,0.65);border:1px solid var(--border-accent);border-radius:var(--radius-md);padding:14px;">
+                <div style="font-size:0.75rem;color:var(--accent-cyan);text-transform:uppercase;font-weight:600;">Projected Balance (After Decision)</div>
+                <div class="kpi-value" id="simBalAfter" style="font-size:1.4rem;margin:4px 0;">₹0</div>
+                <div style="font-size:0.76rem;color:var(--text-secondary);" id="simSubAfter">Post-decision trajectory</div>
+              </div>
+
+              <div style="background:rgba(10,18,38,0.65);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;">
+                <div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Recurring Monthly Impact</div>
+                <div class="kpi-value amount-expense" id="simMonthlyImpactVal" style="font-size:1.4rem;margin:4px 0;">₹0/mo</div>
+                <div style="font-size:0.76rem;color:var(--text-secondary);" id="simSubImpact">Upfront: ₹0</div>
+              </div>
+
+              <div style="background:rgba(10,18,38,0.65);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;">
+                <div style="font-size:0.75rem;color:var(--text-secondary);text-transform:uppercase;font-weight:600;">Lowest Balance Point</div>
+                <div class="kpi-value" id="simMinBalReached" style="font-size:1.4rem;margin:4px 0;">₹0</div>
+                <div style="font-size:0.76rem;color:var(--text-secondary);" id="simSubMin">Liquidity stress floor</div>
+              </div>
+            </div>
+
+            <!-- AI Verdict Alert -->
+            <div class="insight-item info" id="simResultVerdict" style="margin-bottom:16px;">
+              <div class="insight-body">
+                <h4>AI Financial Impact Verdict</h4>
+                <p>Configure a scenario on the left and click "Run Financial Simulation" to evaluate affordability.</p>
+              </div>
+            </div>
+
+            <!-- Trajectory Comparison Chart -->
+            <div class="chart-container" style="height:260px;">
+              <canvas id="simulationTrajectoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Month-by-Month Schedule & Saved Simulations History -->
+        <section class="grid-2" style="margin-top:24px;margin-bottom:0;">
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Month-by-Month Cash Flow Schedule</div>
+                <div class="card-subtitle">Baseline vs Post-Decision closing balance progression</div>
+              </div>
+            </div>
+            <div class="table-responsive" style="max-height:360px;overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Month</th>
+                    <th>Baseline Balance</th>
+                    <th>Decision Outflow</th>
+                    <th>Net Monthly Flow</th>
+                    <th>Simulated Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="simulationScheduleBody">
+                  <tr><td colspan="5" class="empty-state">Loading schedule...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:0;">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Saved Simulations History</div>
+                <div class="card-subtitle">Stored in SQLite database — click "View" to inspect any scenario</div>
+              </div>
+            </div>
+            <div class="table-responsive" style="max-height:360px;overflow-y:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Scenario Name</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Before</th>
+                    <th>After</th>
+                    <th>Risk</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="savedSimulationsBody">
+                  <tr><td colspan="7" class="empty-state">Loading saved simulations...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/simulations.js"></script>
+</body>
+</html>
