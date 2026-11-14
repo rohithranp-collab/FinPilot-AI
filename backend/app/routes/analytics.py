@@ -25,6 +25,20 @@ def _prev_ym(ym_str: str) -> str:
     return f"{y:04d}-{m - 1:02d}"
 
 
+@router.get("/api/analytics", status_code=status.HTTP_200_OK)
+def get_analytics_root(db: Session = Depends(get_db)):
+    """Unified analytics endpoint returning summary KPIs, category breakdowns, and recurring payments."""
+    summary_data = get_analytics_summary(db)
+    categories_data = get_category_analytics(db)
+    recurring_data = detect_and_sync_recurring_payments(db)
+    return {
+        **summary_data,
+        "summary": summary_data,
+        "categories": categories_data,
+        "recurring": recurring_data,
+    }
+
+
 @router.get("/api/analytics/summary", status_code=status.HTTP_200_OK)
 def get_analytics_summary(db: Session = Depends(get_db)):
     """Compute comprehensive financial summary, KPIs, MoM trends, and AI insights."""

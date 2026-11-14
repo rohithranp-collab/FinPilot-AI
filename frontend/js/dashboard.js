@@ -15,6 +15,7 @@
 
 let cashflowForecastChartInstance = null;
 let expenseCategoryChartInstance = null;
+let monthlyIncomeExpenseChartInstance = null;
 let cachedForecastData = null;
 let activeHorizonDays = 30;
 
@@ -34,6 +35,7 @@ async function loadDashboardData() {
     renderDashboardKPIs(summary, forecast);
     renderCashflowForecastChart(forecast, activeHorizonDays);
     renderExpenseCategoryChart(categories);
+    renderMonthlyIncomeExpenseChart(summary.monthly_trends || []);
     renderRecentTransactions(txData.transactions || []);
     renderUpcomingRecurring(recurring.recurring_payments || [], recurring.summary || {});
     renderUnusualSpendingAlerts(anomalies.anomalies || [], anomalies.summary || {});
@@ -278,6 +280,72 @@ function renderExpenseCategoryChart(categoriesData) {
         tooltip: {
           callbacks: {
             label: (ctx) => `${ctx.label}: ${formatINR(ctx.raw)}`,
+          },
+        },
+      },
+    },
+  });
+}
+
+function renderMonthlyIncomeExpenseChart(monthlyTrends) {
+  const canvas = document.getElementById('monthlyIncomeExpenseChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  if (monthlyIncomeExpenseChartInstance) {
+    monthlyIncomeExpenseChartInstance.destroy();
+  }
+
+  if (!monthlyTrends || !monthlyTrends.length) return;
+
+  const ctx = canvas.getContext('2d');
+  monthlyIncomeExpenseChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: monthlyTrends.map((m) => m.month),
+      datasets: [
+        {
+          label: 'Monthly Income',
+          data: monthlyTrends.map((m) => m.income),
+          backgroundColor: 'rgba(16, 185, 129, 0.78)',
+          borderColor: '#10b981',
+          borderWidth: 1,
+          borderRadius: 6,
+        },
+        {
+          label: 'Monthly Expenses',
+          data: monthlyTrends.map((m) => m.expenses),
+          backgroundColor: 'rgba(244, 63, 94, 0.78)',
+          borderColor: '#f43f5e',
+          borderWidth: 1,
+          borderRadius: 6,
+        },
+        {
+          type: 'line',
+          label: 'Net Monthly Savings',
+          data: monthlyTrends.map((m) => m.savings),
+          borderColor: '#38bdf8',
+          backgroundColor: 'rgba(56, 189, 248, 0.15)',
+          borderWidth: 2.5,
+          pointRadius: 3,
+          tension: 0.3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${formatINR(ctx.raw)}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            callback: (val) => formatCompactINR(val),
           },
         },
       },

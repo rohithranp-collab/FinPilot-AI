@@ -51,6 +51,10 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
           <span>Financial Simulations</span>
         </a>
+        <a href="assistant.html" class="nav-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span>AI Financial Assistant</span>
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -80,6 +84,7 @@
         </div>
         <div class="topbar-right">
           <span class="api-pill" id="apiStatusPill"><span class="status-dot"></span> Connecting...</span>
+          <a href="assistant.html" class="btn btn-secondary btn-sm">💬 Ask AI</a>
           <button class="btn btn-secondary btn-sm" onclick="loadDashboardData()">↻ Refresh</button>
           <button class="btn btn-primary btn-sm" onclick="openModal('quickAddTxModal')">+ Add Transaction</button>
         </div>
@@ -173,6 +178,20 @@
             <div class="chart-container">
               <canvas id="expenseCategoryChart"></canvas>
             </div>
+          </div>
+        </section>
+
+        <!-- Monthly Income vs Expense & Spending Trend Chart -->
+        <section class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Monthly Income vs Expense & Spending Trend</div>
+              <div class="card-subtitle">Month-over-month income, total spending, and net savings trajectory</div>
+            </div>
+            <a href="analytics.html" class="btn btn-secondary btn-xs">Detailed Analytics →</a>
+          </div>
+          <div class="chart-container" style="height:260px;">
+            <canvas id="monthlyIncomeExpenseChart"></canvas>
           </div>
         </section>
 

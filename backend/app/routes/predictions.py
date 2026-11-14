@@ -9,6 +9,23 @@ from app.services.anomaly import detect_spending_anomalies
 router = APIRouter(tags=["Predictions & Anomalies"])
 
 
+@router.get("/api/predictions", status_code=status.HTTP_200_OK)
+def get_predictions_root(
+    horizon: int = Query(90, ge=7, le=90, description="Forecast horizon in days (7, 30, or 90)"),
+    db: Session = Depends(get_db),
+):
+    """Unified predictions endpoint returning 7/30/90-day cash-flow forecasts, accuracy metrics, and anomalies."""
+    cashflow_data = generate_cashflow_forecast(db, horizon_days=horizon)
+    accuracy_data = evaluate_prediction_accuracy(db)
+    anomalies_data = detect_spending_anomalies(db)
+    return {
+        **cashflow_data,
+        "cashflow": cashflow_data,
+        "accuracy": accuracy_data,
+        "anomalies": anomalies_data,
+    }
+
+
 @router.get("/api/predictions/cashflow", status_code=status.HTTP_200_OK)
 def get_cashflow_predictions(
     horizon: int = Query(90, ge=7, le=90, description="Forecast horizon in days (7, 30, or 90)"),

@@ -40,7 +40,9 @@ wheels/
 # Environment Variables, API Keys & Secrets
 .env
 .env.*
+backend/.env
 !.env.example
+!backend/.env.example
 *.pem
 *.key
 secrets.json
