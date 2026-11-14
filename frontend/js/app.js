@@ -3,14 +3,22 @@
  */
 
 const FINPILOT_CONFIG = {
-  // Automatically resolve API base URL whether served via FastAPI (:8000) or separate static server (:3000/:5500)
+  /**
+   * Use relative API URLs ('') by default so frontend and backend work seamlessly
+   * on the same domain in production (Render) and when served directly by FastAPI.
+   * Only falls back to local port 8000 when opened via file:// or a separate local static port.
+   */
   getApiBase() {
     const { protocol, hostname, port } = window.location;
-    if (port === '8000') {
-      return '';
+    if (protocol === 'file:') {
+      return 'http://127.0.0.1:8000';
     }
-    const host = hostname || '127.0.0.1';
-    return `${protocol === 'file:' ? 'http:' : protocol}//${host}:8000`;
+    const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isSeparateStaticDevPort = ['3000', '5500', '5501', '8080'].includes(port);
+    if (isLocalHost && isSeparateStaticDevPort) {
+      return `http://${hostname}:8000`;
+    }
+    return '';
   }
 };
 
@@ -60,10 +68,11 @@ function formatDate(dateStr) {
 }
 
 /**
- * Unified Fetch Wrapper with Error Handling
+ * Unified Fetch Wrapper with Relative API URL Support & Error Handling
  */
 async function apiRequest(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${API_BASE}${normalizedEndpoint}`;
   const defaultHeaders = {};
   if (!(options.body instanceof FormData)) {
     defaultHeaders['Content-Type'] = 'application/json';

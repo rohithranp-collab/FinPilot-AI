@@ -157,3 +157,14 @@ cd frontend
 ..\.venv\Scripts\python -m http.server 3000
 ```
 Then open **`http://localhost:3000/dashboard.html`** (or `http://localhost:3000/index.html`) in your browser.
+
+---
+
+## 6. Production Deployment on Render
+
+FinPilot AI is pre-configured for one-click cloud deployment on **Render** via [`render.yaml`](render.yaml), where FastAPI serves both the REST APIs (`/api/*`) and the complete HTML/CSS/JS frontend from the same domain.
+
+- **Build Command**: `pip install -r backend/requirements.txt`
+- **Start Command**: `cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- **Health Check Endpoint**: `/api/health`
+

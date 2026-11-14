@@ -1,8 +1,10 @@
-"""FinPilot AI – FastAPI Application Entrypoint."""
+"""FinPilot AI – FastAPI Application Entrypoint (Production & Local Ready)."""
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
-from fastapi import FastAPI, Request, status
+import uvicorn
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse
@@ -14,9 +16,8 @@ from app.routes import transactions, analytics, predictions, recommendations, si
 from app.utils.seed_demo import seed_demo_data
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Initialize SQLite tables and seed demo data if the database is completely empty."""
+def initialize_database_and_demo():
+    """Ensure database tables exist and seed initial demo data only if the database is empty."""
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
@@ -27,6 +28,16 @@ async def lifespan(app: FastAPI):
         print(f"[FinPilot AI Startup Warning] Demo seeding skipped: {exc}")
     finally:
         db.close()
+
+
+# Ensure tables exist even when imported by ASGI workers before lifespan events
+initialize_database_and_demo()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Verify database initialization on FastAPI startup without overwriting user data."""
+    initialize_database_and_demo()
     yield
 
 
@@ -41,7 +52,7 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configure CORS for local frontend web servers and direct browser access
+# Configure CORS for same-domain production deployment and local web servers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -117,22 +128,46 @@ app.include_router(predictions.router)
 app.include_router(recommendations.router)
 app.include_router(simulations.router)
 
-# Also mount static frontend directory if present so http://localhost:8000 can serve frontend directly too
+# Serve Frontend HTML, CSS, and JS from the Same Domain
 FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+FRONTEND_PAGES = {
+    "index",
+    "dashboard",
+    "transactions",
+    "analytics",
+    "predictions",
+    "recommendations",
+    "simulations",
+}
+
 if FRONTEND_DIR.exists():
     app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
     app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
-
-    @app.get("/{page_name}.html", include_in_schema=False)
-    def serve_html_page(page_name: str):
-        target = FRONTEND_DIR / f"{page_name}.html"
-        if target.exists():
-            return FileResponse(str(target))
-        return FileResponse(str(FRONTEND_DIR / "index.html"))
 
     @app.get("/", include_in_schema=False)
     def serve_root():
         index_file = FRONTEND_DIR / "index.html"
         if index_file.exists():
-            return FileResponse(str(index_file))
+            return FileResponse(str(index_file), media_type="text/html")
         return {"message": "FinPilot AI API is running. Visit /docs for API documentation."}
+
+    @app.get("/{page_name}.html", include_in_schema=False)
+    def serve_html_page(page_name: str):
+        if page_name in FRONTEND_PAGES:
+            target = FRONTEND_DIR / f"{page_name}.html"
+            if target.exists():
+                return FileResponse(str(target), media_type="text/html")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
+
+    @app.get("/{page_name}", include_in_schema=False)
+    def serve_clean_page_route(page_name: str):
+        if page_name in FRONTEND_PAGES:
+            target = FRONTEND_DIR / f"{page_name}.html"
+            if target.exists():
+                return FileResponse(str(target), media_type="text/html")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
